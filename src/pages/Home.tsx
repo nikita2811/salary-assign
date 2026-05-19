@@ -92,7 +92,7 @@ const MetricSkeleton: React.FC = () => (
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 
-type GroupBy = "country" | "jobTitle" | "both" | "experience" | "department";
+type GroupBy = "country" | "jobTitle" | "both" | "experienceYears" | "department";
 
 const EXP_ORDER = ["0-2 years", "3-5 years", "6-10 years", "10+ years"];
 
@@ -358,7 +358,7 @@ const Home: React.FC = () => {
                     }))
                     .sort((a, b) => b.avg - a.avg);
 
-            case "experience":
+            case "experienceYears":
                 return expInsights
                     .map((r) => ({
                         label: r.experienceBand,
@@ -621,7 +621,7 @@ const Home: React.FC = () => {
                             >
                                 {g === "jobTitle" ? "Job title"
                                     : g === "both" ? "Country + Title"
-                                        : g === "experience" ? "Experience"
+                                        : g === "experienceYears" ? "Experience"
                                             : g.charAt(0).toUpperCase() + g.slice(1)}
                             </button>
                         ))}
