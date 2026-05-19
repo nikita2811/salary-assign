@@ -21,7 +21,8 @@ export type EmployeeFormData = {
 };
 
 export type Employee = EmployeeFormData & {
-    id: number;
+    id: string;
+    isActive: boolean;
     createdAt: string;
     updatedAt: string;
 };
