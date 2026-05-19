@@ -6,12 +6,15 @@ import {
     deleteEmployee,
     type EmployeeFormData,
     type ApiError,
-    type EmploymentType
-} from "../api/employeeapi"
+    type EmploymentType,
+} from "../api/employeeapi";
 import "../css/UpdateEmployee.css";
 
-type ToastState = { message: string; type: "success" | "error" | "info" } | null;
+// ── Types ─────────────────────────────────────────────────────────────────────
 
+type ToastState = { message: string; type: "success" | "error" | "info" };
+
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const EMPTY_FORM: EmployeeFormData = {
     firstName: "",
@@ -22,7 +25,7 @@ const EMPTY_FORM: EmployeeFormData = {
     department: "",
     country: "",
     city: "",
-    salary: "",
+    salary: 0,
     employmentType: "" as EmploymentType,
     joiningDate: "",
     experience: "",
@@ -30,9 +33,10 @@ const EMPTY_FORM: EmployeeFormData = {
     manager: "",
 };
 
+// ── Component ─────────────────────────────────────────────────────────────────
+
 const UpdateEmployee: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState<EmployeeFormData>(EMPTY_FORM);
@@ -42,10 +46,10 @@ const UpdateEmployee: React.FC = () => {
     const [saveLoading, setSaveLoading] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [toast, setToast] = useState<ToastState>(null);
+    const [toast, setToast] = useState<ToastState | null>(null);
     const [fetchError, setFetchError] = useState<string | null>(null);
 
-    // ── Helpers ─────────────────────────────────────────────────────────────────
+    // ── Helpers ──────────────────────────────────────────────────────────────────
 
     const showToast = (message: string, type: ToastState["type"] = "success") => {
         setToast({ message, type });
@@ -54,7 +58,7 @@ const UpdateEmployee: React.FC = () => {
 
     const isDirty = JSON.stringify(formData) !== JSON.stringify(original);
 
-    // ── Fetch existing employee ──────────────────────────────────────────────────
+    // ── Fetch existing employee ───────────────────────────────────────────────────
 
     useEffect(() => {
         if (!id) return;
@@ -63,7 +67,7 @@ const UpdateEmployee: React.FC = () => {
 
         getEmployee(id)
             .then((emp) => {
-                const { id: _id, createdAt: _c, updatedAt: _u, ...fields } = emp;
+                const { id: _id, createdAt: _c, updatedAt: _u, isActive: _a, ...fields } = emp;
                 setFormData(fields);
                 setOriginal(fields);
             })
@@ -73,7 +77,7 @@ const UpdateEmployee: React.FC = () => {
             .finally(() => setFetchLoading(false));
     }, [id]);
 
-    // ── Field handlers ───────────────────────────────────────────────────────────
+    // ── Field handlers ────────────────────────────────────────────────────────────
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -92,14 +96,12 @@ const UpdateEmployee: React.FC = () => {
         setFormData({ ...formData, skills: formData.skills.filter((s) => s !== skill) });
     };
 
-
-
     const handleReset = () => {
         setFormData(original);
         showToast("Changes discarded.", "info");
     };
 
-    // ── Submit (full update) ─────────────────────────────────────────────────────
+    // ── Submit (full update) ──────────────────────────────────────────────────────
 
     const handleSubmit = async () => {
         const required: (keyof EmployeeFormData)[] = [
@@ -113,8 +115,8 @@ const UpdateEmployee: React.FC = () => {
 
         setSaveLoading(true);
         try {
-            const updated = await updateEmployee(id, formData);
-            const { id: _id, createdAt: _c, updatedAt: _u, ...fields } = updated;
+            const updated = await updateEmployee(id!, formData);
+            const { id: _id, createdAt: _c, updatedAt: _u, isActive: _a, ...fields } = updated;
             setOriginal(fields);
             showToast(`${updated.firstName} ${updated.lastName} updated successfully.`);
         } catch (err) {
@@ -130,12 +132,12 @@ const UpdateEmployee: React.FC = () => {
         }
     };
 
-    // ── Delete ───────────────────────────────────────────────────────────────────
+    // ── Delete ────────────────────────────────────────────────────────────────────
 
     const handleDelete = async () => {
         setDeleteLoading(true);
         try {
-            await deleteEmployee(Number(id));
+            await deleteEmployee(id!);
             showToast("Employee deleted.", "info");
             setTimeout(() => navigate("/employees"), 1200);
         } catch (err) {
@@ -147,7 +149,7 @@ const UpdateEmployee: React.FC = () => {
         }
     };
 
-    // ── Render states ─────────────────────────────────────────────────────────────
+    // ── Render: Loading ───────────────────────────────────────────────────────────
 
     if (fetchLoading) {
         return (
@@ -164,6 +166,8 @@ const UpdateEmployee: React.FC = () => {
         );
     }
 
+    // ── Render: Error ─────────────────────────────────────────────────────────────
+
     if (fetchError) {
         return (
             <div className="upd-page">
@@ -176,6 +180,8 @@ const UpdateEmployee: React.FC = () => {
             </div>
         );
     }
+
+    // ── Render: Main ──────────────────────────────────────────────────────────────
 
     return (
         <div className="upd-page">
@@ -207,7 +213,9 @@ const UpdateEmployee: React.FC = () => {
                     {isDirty && (
                         <div className="upd-dirty-banner">
                             Unsaved changes
-                            <button className="upd-discard-btn" onClick={handleReset} type="button">Discard</button>
+                            <button className="upd-discard-btn" onClick={handleReset} type="button">
+                                Discard
+                            </button>
                         </div>
                     )}
                 </div>
@@ -273,12 +281,10 @@ const UpdateEmployee: React.FC = () => {
                                 <label className="upd-label">Employment type</label>
                                 <select className="upd-input upd-select" name="employmentType"
                                     value={formData.employmentType} onChange={handleChange}>
-
                                     <option value="">Select type</option>
                                     <option value="full_time">Full Time</option>
                                     <option value="part_time">Part Time</option>
-                                    <option value="contractor">Contract</option>
-
+                                    <option value="contractor">Contractor</option>
                                 </select>
                             </div>
                             <div className="upd-field">
@@ -320,7 +326,7 @@ const UpdateEmployee: React.FC = () => {
                                 placeholder="e.g. React, Docker, AWS — press Enter or Add"
                                 value={skillInput}
                                 onChange={(e) => setSkillInput(e.target.value)}
-
+                                onKeyDown={(e) => e.key === "Enter" && addSkill()}
                             />
                             <button className="upd-skill-add-btn" onClick={addSkill} type="button">Add</button>
                         </div>
@@ -367,7 +373,8 @@ const UpdateEmployee: React.FC = () => {
                         aria-modal="true" aria-labelledby="modal-title">
                         <p className="upd-modal-title" id="modal-title">Delete employee?</p>
                         <p className="upd-modal-body">
-                            This will permanently remove <strong>{original.firstName} {original.lastName}</strong> and cannot be undone.
+                            This will permanently remove{" "}
+                            <strong>{original.firstName} {original.lastName}</strong> and cannot be undone.
                         </p>
                         <div className="upd-modal-actions">
                             <button className="upd-modal-cancel" onClick={() => setShowDeleteModal(false)} type="button">

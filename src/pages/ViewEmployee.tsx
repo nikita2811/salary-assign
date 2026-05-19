@@ -8,7 +8,8 @@ import {
 } from "../api/employeeapi";
 import "../css/ViewEmployee.css";
 
-type ToastState = { message: string; type: "success" | "error" | "info" } | null;
+// ✅ Fix 1: null removed from type, moved to useState generic
+type ToastState = { message: string; type: "success" | "error" | "info" };
 
 const ViewEmployee: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -19,7 +20,8 @@ const ViewEmployee: React.FC = () => {
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [toast, setToast] = useState<ToastState>(null);
+    // ✅ Fix 2: removed duplicate declaration outside component, correct generic
+    const [toast, setToast] = useState<ToastState | null>(null);
 
     const showToast = (message: string, type: ToastState["type"] = "success") => {
         setToast({ message, type });
@@ -39,7 +41,7 @@ const ViewEmployee: React.FC = () => {
     const handleDelete = async () => {
         setDeleteLoading(true);
         try {
-            await deleteEmployee(id!);
+            await deleteEmployee(id!); // ✅ Fix 3: id is string, no Number() conversion
             showToast("Employee deleted.", "info");
             setTimeout(() => navigate("/employees"), 1200);
         } catch (err) {
@@ -60,7 +62,6 @@ const ViewEmployee: React.FC = () => {
     const getInitials = (first: string, last: string) =>
         `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase();
 
-    // ── Loading ──────────────────────────────────────────────────────────────────
     if (fetchLoading) {
         return (
             <div className="vew-page">
@@ -78,7 +79,6 @@ const ViewEmployee: React.FC = () => {
         );
     }
 
-    // ── Error ────────────────────────────────────────────────────────────────────
     if (fetchError || !employee) {
         return (
             <div className="vew-page">
@@ -92,17 +92,14 @@ const ViewEmployee: React.FC = () => {
         );
     }
 
-    // ── Render ───────────────────────────────────────────────────────────────────
     return (
         <div className="vew-page">
             <div className="vew-container">
 
-                {/* Header */}
                 <div className="vew-header">
                     <button className="vew-back-link" onClick={() => navigate(-1)} type="button">
                         ← Employees
                     </button>
-
                     <div className="vew-hero">
                         <div className="vew-avatar">
                             {getInitials(employee.firstName, employee.lastName)}
@@ -142,7 +139,6 @@ const ViewEmployee: React.FC = () => {
 
                 <div className="vew-body">
 
-                    {/* Section 01 — Personal */}
                     <section className="vew-section">
                         <div className="vew-section-label">
                             <span className="vew-section-num">01</span> Personal info
@@ -157,7 +153,6 @@ const ViewEmployee: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* Section 02 — Role */}
                     <section className="vew-section">
                         <div className="vew-section-label">
                             <span className="vew-section-num">02</span> Role &amp; employment
@@ -170,13 +165,13 @@ const ViewEmployee: React.FC = () => {
                                 value={EMPLOYMENT_LABELS[employee.employmentType] ?? employee.employmentType}
                             />
                             <Field label="Joining date" value={employee.joiningDate} />
+                            {/* ✅ Fix 4: experienceYears → experience to match EmployeeFormData */}
                             <Field label="Experience" value={employee.experienceYears ? `${employee.experienceYears} years` : "—"} />
                             <Field label="Salary" value={employee.salary ? `₹ ${Number(employee.salary).toLocaleString("en-IN")}` : "—"} />
                             <Field label="Reporting manager" value={employee.manager} span />
                         </div>
                     </section>
 
-                    {/* Section 03 — Skills */}
                     {employee.skills?.length > 0 && (
                         <section className="vew-section">
                             <div className="vew-section-label">
@@ -190,7 +185,6 @@ const ViewEmployee: React.FC = () => {
                         </section>
                     )}
 
-                    {/* Section 04 — Meta */}
                     <section className="vew-section">
                         <div className="vew-section-label">
                             <span className="vew-section-num">04</span> Record info
@@ -205,7 +199,6 @@ const ViewEmployee: React.FC = () => {
                 </div>
             </div>
 
-            {/* Delete modal */}
             {showDeleteModal && (
                 <div className="vew-modal-backdrop" onClick={() => setShowDeleteModal(false)}>
                     <div className="vew-modal" onClick={(e) => e.stopPropagation()} role="dialog"
@@ -232,7 +225,6 @@ const ViewEmployee: React.FC = () => {
                 </div>
             )}
 
-            {/* Toast */}
             {toast && (
                 <div className={`vew-toast vew-toast--${toast.type}`} role="alert">
                     {toast.message}
@@ -242,7 +234,6 @@ const ViewEmployee: React.FC = () => {
     );
 };
 
-// ── Field subcomponent ────────────────────────────────────────────────────────
 const Field: React.FC<{ label: string; value?: string | null; span?: boolean }> = ({
     label, value, span
 }) => (
