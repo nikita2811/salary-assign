@@ -116,9 +116,9 @@ const Home: React.FC = () => {
     const [insightsError, setInsightsError] = useState<string | null>(null);
 
     // ── Table state ───────────────────────────────────────────────────────────
-    const [search, setSearch] = useState("");
+    const [search] = useState("");
     const [deptFilter, setDeptFilter] = useState("All");
-    const [typeFilter, setTypeFilter] = useState("All");
+    const [typeFilter] = useState("All");
     const [sortKey, setSortKey] = useState<keyof Employee>("firstName");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
     const [page, setPage] = useState(1);
@@ -241,10 +241,7 @@ const Home: React.FC = () => {
         return ["All", ...Array.from(s).sort()];
     }, [employees]);
 
-    const empTypes = useMemo(() => {
-        const s = new Set(employees.map((e) => e.employmentType).filter(Boolean));
-        return ["All", ...Array.from(s).sort()];
-    }, [employees]);
+
 
     // ── Filtered + sorted table rows ──────────────────────────────────────────
 
