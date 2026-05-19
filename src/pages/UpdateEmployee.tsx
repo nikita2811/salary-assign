@@ -28,7 +28,7 @@ const EMPTY_FORM: EmployeeFormData = {
     salary: 0,
     employmentType: "" as EmploymentType,
     joiningDate: "",
-    experience: "",
+    experienceYears: 0,
     skills: [],
     manager: "",
 };
@@ -296,7 +296,7 @@ const UpdateEmployee: React.FC = () => {
                                 <label className="upd-label">Experience (years)</label>
                                 <input className="upd-input" type="number" name="experience"
                                     placeholder="3" min={0} max={50}
-                                    value={formData.experience} onChange={handleChange} />
+                                    value={formData.experienceYears} onChange={handleChange} />
                             </div>
                             <div className="upd-field">
                                 <label className="upd-label">Salary (₹) <span className="upd-req">*</span></label>

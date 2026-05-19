@@ -604,7 +604,7 @@ const Home: React.FC = () => {
                         </p>
                     </div>
                     <div className="db-group-tabs">
-                        {(["country", "jobTitle", "both", "experience", "department"] as GroupBy[]).map((g) => (
+                        {(["country", "jobTitle", "both", "experienceYears", "department"] as GroupBy[]).map((g) => (
                             <button
                                 key={g}
                                 className={`db-tab${groupBy === g ? " db-tab--active" : ""}`}

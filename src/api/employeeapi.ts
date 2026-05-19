@@ -299,6 +299,6 @@ export const searchEmployees = async (
         };
     } catch (error) {
         console.error("Search failed:", error);
-        return [];
+
     }
 };

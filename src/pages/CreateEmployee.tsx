@@ -24,10 +24,10 @@ const CreateEmployee: React.FC = () => {
         department: "",
         country: "",
         city: "",
-        salary: "",
+        salary: 0,
         employmentType: employmentType,
         joiningDate: "",
-        experience: "",
+        experienceYears: 0,
         skills: [],
         manager: "",
     });
