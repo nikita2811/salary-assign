@@ -33,27 +33,14 @@ export type ApiError = {
     fieldErrors?: Record<string, string[]>;
 };
 
-// ── Case Converters ───────────────────────────────────────────────────────────
+export type PaginatedResponse<T> = {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: T[];
+};
 
-function camelToSnake(str: string): string {
-    return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-}
 
-function snakeToCamel(str: string): string {
-    return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-}
-
-function convertKeysToSnake(obj: Record<string, unknown>): Record<string, unknown> {
-    return Object.fromEntries(
-        Object.entries(obj).map(([key, val]) => [camelToSnake(key), val])
-    );
-}
-
-function convertKeysToCamel(obj: Record<string, unknown>): Record<string, unknown> {
-    return Object.fromEntries(
-        Object.entries(obj).map(([key, val]) => [snakeToCamel(key), val])
-    );
-}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -116,9 +103,10 @@ export async function createEmployee(data: EmployeeFormData): Promise<Employee> 
 /**
  * Fetch a single employee by ID.
  */
-export async function getEmployee(id: number): Promise<Employee> {
+export async function getEmployee(id: string): Promise<Employee> {
     try {
         const response = await api.get<Employee>(`${ENDPOINT}${id}/`);
+        console.log(response.data)
         return response.data;
     } catch (error) {
         throw parseError(error);
@@ -130,9 +118,14 @@ export async function getEmployee(id: number): Promise<Employee> {
  */
 export async function listEmployees(): Promise<Employee[]> {
     try {
-        const response = await api.get<Employee[]>(ENDPOINT);
+        const response = await api.get<PaginatedResponse<Employee>>(ENDPOINT);
         console.log(response.data)
-        return response.data;
+        return response.data.results.map((e: any) => ({
+            ...e,
+            firstName: e.fullName?.split(" ")[0] ?? "",
+            lastName: e.fullName?.split(" ").slice(1).join(" ") ?? "",
+        }));
+
     } catch (error) {
         throw parseError(error);
     }
@@ -141,7 +134,7 @@ export async function listEmployees(): Promise<Employee[]> {
 /**
  * Update an existing employee (full update).
  */
-export async function updateEmployee(id: number, data: EmployeeFormData): Promise<Employee> {
+export async function updateEmployee(id: string, data: EmployeeFormData): Promise<Employee> {
     try {
         const response = await api.put<Employee>(`${ENDPOINT}${id}/`, data);
         return response.data;

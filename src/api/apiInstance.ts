@@ -27,13 +27,13 @@ function convertKeysToSnake(obj: unknown): unknown {
 
 function convertKeysToCamel(obj: unknown): unknown {
     if (Array.isArray(obj)) {
-        return obj.map(convertKeysToCamel);
+        return obj.map(convertKeysToCamel); // ✅ recurse into each array item
     }
     if (obj !== null && typeof obj === "object") {
         return Object.fromEntries(
-            Object.entries(obj).map(([key, val]) => [
+            Object.entries(obj as Record<string, unknown>).map(([key, val]) => [
                 snakeToCamel(key),
-                convertKeysToCamel(val),   // ✅ recursive for nested objects
+                convertKeysToCamel(val), // ✅ recurse into nested objects
             ])
         );
     }

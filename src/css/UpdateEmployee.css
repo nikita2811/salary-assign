@@ -1,0 +1,697 @@
+/* ─── Page shell ─────────────────────────────────────────────── */
+.upd-page {
+    min-height: 100vh;
+    background: #f5f4f0;
+    padding: 40px 16px 80px;
+    font-family: "DM Sans", "Helvetica Neue", sans-serif;
+}
+
+/* ─── Card container ─────────────────────────────────────────── */
+.upd-container {
+    max-width: 760px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 40px rgba(0, 0, 0, 0.06);
+}
+
+/* ─── Header ─────────────────────────────────────────────────── */
+.upd-header {
+    padding: 36px 52px 36px;
+    background: #0f0f0f;
+    color: #ffffff;
+}
+
+.upd-back-link {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 20px;
+    display: inline-block;
+    transition: color 0.15s;
+    letter-spacing: -0.01em;
+}
+
+.upd-back-link:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.upd-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.upd-header-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.upd-header-title {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin: 0 0 6px;
+    color: #ffffff;
+    line-height: 1.1;
+}
+
+.upd-header-sub {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0;
+    font-weight: 400;
+}
+
+.upd-delete-trigger {
+    flex-shrink: 0;
+    height: 36px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    margin-top: 4px;
+}
+
+.upd-delete-trigger:hover {
+    background: rgba(220, 60, 60, 0.18);
+    border-color: rgba(220, 60, 60, 0.4);
+    color: #ff8a8a;
+}
+
+/* ─── Dirty banner ───────────────────────────────────────────── */
+.upd-dirty-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.upd-discard-btn {
+    background: none;
+    border: none;
+    font-size: 13px;
+    font-family: inherit;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    transition: color 0.15s;
+}
+
+.upd-discard-btn:hover {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* ─── Body ───────────────────────────────────────────────────── */
+.upd-body {
+    padding: 44px 52px 52px;
+}
+
+/* ─── Section ────────────────────────────────────────────────── */
+.upd-section {
+    margin-bottom: 44px;
+}
+
+.upd-section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.upd-section-num {
+    font-size: 10px;
+    font-weight: 700;
+    color: #ccc;
+}
+
+/* ─── Grid ───────────────────────────────────────────────────── */
+.upd-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+}
+
+.upd-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.upd-field-full {
+    grid-column: 1 / -1;
+}
+
+/* ─── Labels ─────────────────────────────────────────────────── */
+.upd-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #444;
+    letter-spacing: -0.01em;
+}
+
+.upd-req {
+    color: #d04040;
+    margin-left: 2px;
+}
+
+/* ─── Inputs ─────────────────────────────────────────────────── */
+.upd-input {
+    height: 42px;
+    padding: 0 14px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #111;
+    background: #fafafa;
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    width: 100%;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.upd-input::placeholder {
+    color: #bbb;
+}
+
+.upd-input:hover {
+    border-color: #d0d0d0;
+    background: #ffffff;
+}
+
+.upd-input:focus {
+    border-color: #0f0f0f;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(15, 15, 15, 0.07);
+}
+
+.upd-select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+}
+
+/* ─── Prefix wrap (₹) ───────────────────────────────────────── */
+.upd-prefix-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.upd-prefix {
+    position: absolute;
+    left: 14px;
+    font-size: 14px;
+    color: #999;
+    pointer-events: none;
+    user-select: none;
+    z-index: 1;
+}
+
+.upd-input-prefix {
+    padding-left: 28px;
+}
+
+/* ─── Skills ─────────────────────────────────────────────────── */
+.upd-skills-input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.upd-skills-input-row .upd-input {
+    flex: 1;
+}
+
+.upd-skill-add-btn {
+    height: 42px;
+    padding: 0 20px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #ffffff;
+    background: #0f0f0f;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: -0.01em;
+}
+
+.upd-skill-add-btn:hover {
+    opacity: 0.82;
+}
+
+.upd-skill-add-btn:active {
+    transform: scale(0.97);
+}
+
+.upd-skills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.upd-skill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f5f4f0;
+    border: 1px solid #e8e8e8;
+    border-radius: 20px;
+    padding: 5px 12px 5px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
+    transition: background 0.12s;
+}
+
+.upd-skill-tag:hover {
+    background: #eceae5;
+}
+
+.upd-skill-remove {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    color: #bbb;
+    transition: color 0.12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+}
+
+.upd-skill-remove:hover {
+    color: #555;
+}
+
+/* ─── Action bar ─────────────────────────────────────────────── */
+.upd-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 8px;
+    padding-top: 28px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.upd-cancel-btn {
+    height: 44px;
+    padding: 0 22px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    color: #666;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.upd-cancel-btn:hover:not(:disabled) {
+    background: #f5f4f0;
+    border-color: #ccc;
+    color: #333;
+}
+
+.upd-cancel-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.upd-save-btn {
+    height: 44px;
+    padding: 0 28px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+    background: #0f0f0f;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: opacity 0.15s, transform 0.1s;
+}
+
+.upd-save-btn:hover:not(:disabled) {
+    opacity: 0.82;
+}
+
+.upd-save-btn:active:not(:disabled) {
+    transform: scale(0.99);
+}
+
+.upd-save-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* ─── Spinner ────────────────────────────────────────────────── */
+.upd-spinner {
+    width: 15px;
+    height: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: upd-spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+.upd-spinner--dark {
+    border-color: rgba(0, 0, 0, 0.15);
+    border-top-color: #ffffff;
+}
+
+@keyframes upd-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ─── Delete modal ───────────────────────────────────────────── */
+.upd-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: upd-fade-in 0.15s ease;
+}
+
+.upd-modal {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 16px;
+    animation: upd-modal-in 0.18s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.upd-modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111;
+    margin: 0 0 10px;
+    letter-spacing: -0.02em;
+}
+
+.upd-modal-body {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+    margin: 0 0 24px;
+}
+
+.upd-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.upd-modal-cancel {
+    height: 40px;
+    padding: 0 20px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    color: #555;
+    background: #f5f4f0;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.upd-modal-cancel:hover {
+    background: #eceae5;
+}
+
+.upd-modal-confirm {
+    height: 40px;
+    padding: 0 20px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #ffffff;
+    background: #c13030;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.15s;
+}
+
+.upd-modal-confirm:hover:not(:disabled) {
+    opacity: 0.85;
+}
+
+.upd-modal-confirm:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ─── Toast ──────────────────────────────────────────────────── */
+.upd-toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    padding: 13px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: "DM Sans", "Helvetica Neue", sans-serif;
+    max-width: 320px;
+    animation: upd-toast-in 0.22s ease;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14);
+}
+
+.upd-toast--success {
+    background: #0f0f0f;
+    color: #ffffff;
+}
+
+.upd-toast--error {
+    background: #c13030;
+    color: #ffffff;
+}
+
+.upd-toast--info {
+    background: #444;
+    color: #ffffff;
+}
+
+/* ─── Skeleton loader ────────────────────────────────────────── */
+.upd-skeleton-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.upd-skeleton {
+    background: linear-gradient(90deg, #ebebeb 25%, #f5f5f5 50%, #ebebeb 75%);
+    background-size: 200% 100%;
+    animation: upd-shimmer 1.4s infinite;
+    border-radius: 10px;
+}
+
+.upd-skeleton--header {
+    height: 160px;
+    margin-bottom: 24px;
+    border-radius: 20px 20px 0 0;
+}
+
+.upd-skeleton-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    background: #fff;
+    padding: 44px 52px;
+    border-radius: 0 0 20px 20px;
+}
+
+.upd-skeleton--field {
+    height: 62px;
+}
+
+/* ─── Error state ────────────────────────────────────────────── */
+.upd-error-state {
+    max-width: 400px;
+    margin: 80px auto;
+    text-align: center;
+}
+
+.upd-error-icon {
+    font-size: 36px;
+    margin: 0 0 12px;
+}
+
+.upd-error-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111;
+    margin: 0 0 8px;
+}
+
+.upd-error-msg {
+    font-size: 14px;
+    color: #888;
+    margin: 0 0 24px;
+}
+
+.upd-back-btn {
+    height: 40px;
+    padding: 0 20px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    color: #fff;
+    background: #0f0f0f;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* ─── Animations ─────────────────────────────────────────────── */
+@keyframes upd-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+@keyframes upd-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes upd-modal-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes upd-toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 600px) {
+
+    .upd-header,
+    .upd-body {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+    .upd-header {
+        padding-top: 28px;
+        padding-bottom: 28px;
+    }
+
+    .upd-header-title {
+        font-size: 22px;
+    }
+
+    .upd-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .upd-field-full {
+        grid-column: 1;
+    }
+
+    .upd-actions {
+        flex-direction: column-reverse;
+    }
+
+    .upd-cancel-btn,
+    .upd-save-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .upd-skeleton-grid {
+        padding: 24px;
+        grid-template-columns: 1fr;
+    }
+
+    .upd-toast {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+    }
+}
