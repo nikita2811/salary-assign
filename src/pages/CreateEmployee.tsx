@@ -246,7 +246,7 @@ const CreateEmployee: React.FC = () => {
                                     placeholder="3"
                                     min={0}
                                     max={50}
-                                    value={formData.experience}
+                                    value={formData.experienceYears}
                                     onChange={handleChange}
                                 />
                             </div>
