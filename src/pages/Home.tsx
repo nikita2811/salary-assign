@@ -1,51 +1,47 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { listEmployees, deleteEmployee, type Employee, type ApiError } from "../api/employeeapi";
+import toast from "react-hot-toast"; // ✅ Bug fix: use react-hot-toast, remove dual toast system
+import {
+    listEmployees,
+    getEmployeeCount,
+    deleteEmployee,
+    getGlobalSalaryInsight,
+    getSalaryByCountry,
+    getSalaryByJobTitle,
+    getSalaryByDepartment,
+    getSalaryByExperienceBand,
+    searchEmployees,
+    type Employee,
+    type ApiError,
+    type SalaryInsight,
+    type CountryInsight,
+    type JobTitleInsight,
+    type DepartmentInsight,
+    type ExperienceBandInsight,
+} from "../api/employeeapi";
 import "../css/Home.css";
 
-// ── Metric helpers ────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-function toNum(s: string) { return parseFloat(s) || 0; }
+function toNum(s: string | number) { return parseFloat(String(s)) || 0; }
 function fmt(n: number) {
     return "₹" + Math.round(n).toLocaleString("en-IN");
 }
 
-type SalaryRow = { label: string; min: number; max: number; avg: number; count: number };
+// ── Unified insight row shape ─────────────────────────────────────────────────
 
-function buildRows(employees: Employee[], keyFn: (e: Employee) => string): SalaryRow[] {
-    const map = new Map<string, number[]>();
-    for (const e of employees) {
-        const k = keyFn(e) || "—";
-        if (!map.has(k)) map.set(k, []);
-        map.get(k)!.push(toNum(e.salary));
-    }
-    return Array.from(map.entries())
-        .map(([label, salaries]) => ({
-            label,
-            min: Math.min(...salaries),
-            max: Math.max(...salaries),
-            avg: salaries.reduce((a, b) => a + b, 0) / salaries.length,
-            count: salaries.length,
-        }))
-        .sort((a, b) => b.avg - a.avg);
-}
-
-function expBand(exp: string): string {
-    const y = parseFloat(exp);
-    if (isNaN(y)) return "Unknown";
-    if (y < 1) return "< 1 yr";
-    if (y < 3) return "1–2 yrs";
-    if (y < 6) return "3–5 yrs";
-    if (y < 10) return "6–9 yrs";
-    return "10+ yrs";
-}
-
-const EXP_ORDER = ["< 1 yr", "1–2 yrs", "3–5 yrs", "6–9 yrs", "10+ yrs", "Unknown"];
+type InsightRow = {
+    label: string;
+    min: number;
+    max: number;
+    avg: number;
+    count: number;
+    extra?: string;
+};
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-const MetricBar: React.FC<{ rows: SalaryRow[]; maxVal: number }> = ({ rows, maxVal }) => (
+const MetricBar: React.FC<{ rows: InsightRow[]; maxVal: number }> = ({ rows, maxVal }) => (
     <div className="db-metric-rows">
         {rows.map((r) => (
             <div key={r.label} className="db-metric-row">
@@ -73,44 +69,169 @@ const MetricBar: React.FC<{ rows: SalaryRow[]; maxVal: number }> = ({ rows, maxV
     </div>
 );
 
+const MetricSkeleton: React.FC = () => (
+    <div className="db-metric-rows">
+        {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="db-metric-row db-metric-row--skeleton">
+                <div className="db-metric-label-wrap">
+                    <span className="db-skeleton db-skeleton--label" />
+                    <span className="db-skeleton db-skeleton--count" />
+                </div>
+                <div className="db-bar-track">
+                    <div className="db-skeleton db-skeleton--bar" style={{ width: `${30 + i * 15}%` }} />
+                </div>
+                <div className="db-metric-vals">
+                    <span className="db-skeleton db-skeleton--val" />
+                    <span className="db-skeleton db-skeleton--val" />
+                    <span className="db-skeleton db-skeleton--val" />
+                </div>
+            </div>
+        ))}
+    </div>
+);
+
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 
 type GroupBy = "country" | "jobTitle" | "both" | "experience" | "department";
 
+const EXP_ORDER = ["0-2 years", "3-5 years", "6-10 years", "10+ years"];
+
 const Home: React.FC = () => {
     const navigate = useNavigate();
+
+    // ── Employee list state ───────────────────────────────────────────────────
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [totalCount, setTotalCount] = useState<number>(0);
 
-    // Table state
+    // ── Insight state ─────────────────────────────────────────────────────────
+    const [globalSalary, setGlobalSalary] = useState<SalaryInsight | null>(null);
+    const [countryInsights, setCountryInsights] = useState<CountryInsight[]>([]);
+    const [jobTitleInsights, setJobTitleInsights] = useState<JobTitleInsight[]>([]);
+    const [deptInsights, setDeptInsights] = useState<DepartmentInsight[]>([]);
+    const [expInsights, setExpInsights] = useState<ExperienceBandInsight[]>([]);
+    // ✅ Bug fix: start as true so stat cards show "—" immediately, not stale zeros
+    const [insightsLoading, setInsightsLoading] = useState(true);
+    const [insightsError, setInsightsError] = useState<string | null>(null);
+
+    // ── Table state ───────────────────────────────────────────────────────────
     const [search, setSearch] = useState("");
     const [deptFilter, setDeptFilter] = useState("All");
     const [typeFilter, setTypeFilter] = useState("All");
     const [sortKey, setSortKey] = useState<keyof Employee>("firstName");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
     const [page, setPage] = useState(1);
-    const PAGE_SIZE = 8;
+    const [filterCountry, setFilterCountry] = useState("All");
+    const [filterJobTitle, setFilterJobTitle] = useState("All");
+    const [filterDepartment, setFilterDepartment] = useState("All");
 
-    // Metrics state
+
+    const countryOptions = useMemo(() =>
+        ["All", ...countryInsights.map((r) => r.country).filter(Boolean).sort()],
+        [countryInsights]
+    );
+
+    const jobTitleOptions = useMemo(() => {
+        const titles = new Set(jobTitleInsights.map((r) => r.jobTitle).filter(Boolean));
+        return ["All", ...Array.from(titles).sort()];
+    }, [jobTitleInsights]);
+
+    const departmentOptions = useMemo(() =>
+        ["All", ...deptInsights.map((r) => r.department).filter(Boolean).sort()],
+        [deptInsights]
+    );
+
+    // table page (local)
+    const [apiPage, setApiPage] = useState(1);     // API page (server)
+
+    const [hasMore, setHasMore] = useState(true);
+    const [fetchLoading, setFetchLoading] = useState(false)
+    const PAGE_SIZE = 8;
+    const FETCH_SIZE = 50;
+
+    // ── Metrics state ─────────────────────────────────────────────────────────
     const [groupBy, setGroupBy] = useState<GroupBy>("country");
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
     const [deleteLoading, setDeleteLoading] = useState(false);
-    const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
-    const showToast = (msg: string, type: "success" | "error" = "success") => {
-        setToast({ msg, type });
-        setTimeout(() => setToast(null), 3000);
-    };
+    // ── Initial data load ─────────────────────────────────────────────────────
 
     useEffect(() => {
-        listEmployees()
-            .then((employees) => {
-                setEmployees(employees); // ✅ already an array, no .results needed
+        Promise.all([listEmployees(1, FETCH_SIZE), getEmployeeCount()])
+            .then(([data, count]) => {
+                setEmployees(data.results);
+                setTotalCount(count);
+                setHasMore(data.next !== null);
             })
-
             .catch((e: ApiError) => setError(e.message ?? "Failed to load employees."))
             .finally(() => setLoading(false));
+    }, []);
+
+    const loadMore = async () => {
+        if (fetchLoading || !hasMore) return;
+        setFetchLoading(true);
+        try {
+            const next = apiPage + 1;
+            const data = await listEmployees(next, FETCH_SIZE);
+            setEmployees((prev) => [...prev, ...data.results]); // ← append
+            setApiPage(next);
+            setHasMore(data.next !== null);
+        } catch (e) {
+            toast.error("Failed to load more employees.");
+        } finally {
+            setFetchLoading(false);
+        }
+    };
+
+    const handleSearch = async (search: string) => {
+        if (!search.trim()) {
+            setEmployees([]);
+            return;
+        }
+
+        setFetchLoading(true);
+
+        try {
+            const data = await searchEmployees(
+                search,
+
+            );
+            setEmployees(data.results);
+
+            setApiPage(1);
+
+            setHasMore(data.next !== null);
+        } catch (e) {
+            toast.error("Failed to search employees.");
+        } finally {
+            setFetchLoading(false);
+        }
+
+    };
+
+    // ── Load all insights in parallel (including new global salary) ───────────
+
+    useEffect(() => {
+        setInsightsLoading(true);
+        setInsightsError(null);
+        Promise.all([
+            getGlobalSalaryInsight(),   // ✅ new: accurate single-query global stats
+            getSalaryByCountry(),
+            getSalaryByJobTitle(),
+            getSalaryByDepartment(),
+            getSalaryByExperienceBand(),
+        ])
+            .then(([salary, country, jobTitle, dept, exp]) => {
+                setGlobalSalary(salary);
+                setCountryInsights(country);
+                setJobTitleInsights(jobTitle);
+                setDeptInsights(dept);
+                setExpInsights(exp);
+                console.log(globalSalary)
+            })
+            .catch((e: ApiError) => setInsightsError(e.message ?? "Failed to load insights."))
+            .finally(() => setInsightsLoading(false));
     }, []);
 
     // ── Derived filter options ────────────────────────────────────────────────
@@ -134,8 +255,8 @@ const Home: React.FC = () => {
                 !q ||
                 `${e.firstName} ${e.lastName}`.toLowerCase().includes(q) ||
                 e.email.toLowerCase().includes(q) ||
-                e.jobTitle.toLowerCase().includes(q) ||
-                e.department.toLowerCase().includes(q);
+                (e.jobTitle ?? "").toLowerCase().includes(q) ||
+                (e.department ?? "").toLowerCase().includes(q);
             const matchDept = deptFilter === "All" || e.department === deptFilter;
             const matchType = typeFilter === "All" || e.employmentType === typeFilter;
             return matchSearch && matchDept && matchType;
@@ -146,7 +267,7 @@ const Home: React.FC = () => {
         return [...filtered].sort((a, b) => {
             const av = String(a[sortKey] ?? "");
             const bv = String(b[sortKey] ?? "");
-            const cmp = sortKey === "salary" || sortKey === "experience"
+            const cmp = sortKey === "salary" || sortKey === "experienceYears"
                 ? toNum(av) - toNum(bv)
                 : av.localeCompare(bv);
             return sortDir === "asc" ? cmp : -cmp;
@@ -167,30 +288,94 @@ const Home: React.FC = () => {
             ? <span className="db-sort-icon">{sortDir === "asc" ? "↑" : "↓"}</span>
             : <span className="db-sort-icon db-sort-icon--idle">↕</span>;
 
-    // ── Salary metrics ────────────────────────────────────────────────────────
+    // ── Map API insight data → unified InsightRow[] ───────────────────────────
 
-    const metricRows = useMemo(() => {
-        if (!employees.length) return [];
-        let rows: SalaryRow[] = [];
-        if (groupBy === "country") rows = buildRows(employees, (e) => e.country);
-        else if (groupBy === "jobTitle") rows = buildRows(employees, (e) => e.jobTitle);
-        else if (groupBy === "both") rows = buildRows(employees, (e) => `${e.country} · ${e.jobTitle}`);
-        else if (groupBy === "department") rows = buildRows(employees, (e) => e.department);
-        else if (groupBy === "experience") {
-            rows = buildRows(employees, (e) => expBand(e.experience));
-            rows.sort((a, b) => EXP_ORDER.indexOf(a.label) - EXP_ORDER.indexOf(b.label));
+
+
+    const metricRows = useMemo((): InsightRow[] => {
+        switch (groupBy) {
+            case "country":
+                return countryInsights
+                    .filter((r) => filterCountry === "All" || r.country === filterCountry)
+                    .map((r) => ({
+                        label: r.country || "—",
+                        min: toNum(r.minSalary),
+                        max: toNum(r.maxSalary),
+                        avg: toNum(r.avgSalary),
+                        count: r.headcount,
+                    }))
+                    .sort((a, b) => b.avg - a.avg);
+
+            case "jobTitle": {
+                const map = new Map<string, { min: number; max: number; totalSalary: number; count: number }>();
+                for (const r of jobTitleInsights) {
+                    if (filterJobTitle !== "All" && r.jobTitle !== filterJobTitle) continue;
+                    const key = r.jobTitle || "Unknown";
+                    const existing = map.get(key);
+                    if (!existing) {
+                        map.set(key, { min: toNum(r.minSalary), max: toNum(r.maxSalary), totalSalary: toNum(r.avgSalary) * r.headcount, count: r.headcount });
+                    } else {
+                        existing.min = Math.min(existing.min, toNum(r.minSalary));
+                        existing.max = Math.max(existing.max, toNum(r.maxSalary));
+                        existing.totalSalary += toNum(r.avgSalary) * r.headcount;
+                        existing.count += r.headcount;
+                    }
+                }
+                return Array.from(map.entries())
+                    .map(([label, v]) => ({ label, min: v.min, max: v.max, avg: v.totalSalary / v.count, count: v.count }))
+                    .sort((a, b) => b.avg - a.avg);
+            }
+
+            case "both": {
+                const seen = new Map<string, InsightRow>();
+                for (const r of jobTitleInsights) {
+                    if (filterCountry !== "All" && r.country !== filterCountry) continue;
+                    if (filterJobTitle !== "All" && r.jobTitle !== filterJobTitle) continue;
+                    const label = `${r.country || "—"} · ${r.jobTitle || "Unknown"}`;
+                    const existing = seen.get(label);
+                    if (existing) {
+                        existing.min = Math.min(existing.min, toNum(r.minSalary));
+                        existing.max = Math.max(existing.max, toNum(r.maxSalary));
+                        existing.avg = (existing.avg * existing.count + toNum(r.avgSalary) * r.headcount) / (existing.count + r.headcount);
+                        existing.count += r.headcount;
+                    } else {
+                        seen.set(label, { label, min: toNum(r.minSalary), max: toNum(r.maxSalary), avg: toNum(r.avgSalary), count: r.headcount });
+                    }
+                }
+                return Array.from(seen.values()).sort((a, b) => b.avg - a.avg);
+            }
+
+            case "department":
+                return deptInsights
+                    .filter((r) => filterDepartment === "All" || r.department === filterDepartment)
+                    .map((r) => ({
+                        label: r.department || "—",
+                        min: toNum(r.minSalary),
+                        max: toNum(r.maxSalary),
+                        avg: toNum(r.avgSalary),
+                        count: r.headcount,
+                        extra: fmt(toNum(r.salaryRange)),
+                    }))
+                    .sort((a, b) => b.avg - a.avg);
+
+            case "experience":
+                return expInsights
+                    .map((r) => ({
+                        label: r.experienceBand,
+                        min: toNum(r.minSalary),
+                        max: toNum(r.maxSalary),
+                        avg: toNum(r.avgSalary),
+                        count: r.headcount,
+                    }))
+                    .sort((a, b) => EXP_ORDER.indexOf(a.label) - EXP_ORDER.indexOf(b.label));
+
+            default:
+                return [];
         }
-        return rows;
-    }, [employees, groupBy]);
+    }, [groupBy, countryInsights, jobTitleInsights, deptInsights, expInsights,
+        filterCountry, filterJobTitle, filterDepartment]);
 
     const maxVal = useMemo(() => Math.max(...metricRows.map((r) => r.max), 1), [metricRows]);
-
-    // ── Global stats ──────────────────────────────────────────────────────────
-
-    const allSalaries = employees.map((e) => toNum(e.salary)).filter((n) => n > 0);
-    const globalAvg = allSalaries.length ? allSalaries.reduce((a, b) => a + b, 0) / allSalaries.length : 0;
-    const globalMax = allSalaries.length ? Math.max(...allSalaries) : 0;
-    const globalMin = allSalaries.length ? Math.min(...allSalaries) : 0;
 
     // ── Delete ────────────────────────────────────────────────────────────────
 
@@ -200,11 +385,13 @@ const Home: React.FC = () => {
         try {
             await deleteEmployee(deleteTarget.id);
             setEmployees((prev) => prev.filter((e) => e.id !== deleteTarget.id));
-            showToast(`${deleteTarget.firstName} ${deleteTarget.lastName} deleted.`);
+            setTotalCount((c) => c - 1);
+            // ✅ Bug fix: use react-hot-toast (already in App.tsx via <Toaster />)
+            toast.success(`${deleteTarget.firstName} ${deleteTarget.lastName} deleted.`);
             setDeleteTarget(null);
         } catch (e) {
             const ae = e as ApiError;
-            showToast(ae.message ?? "Delete failed.", "error");
+            toast.error(ae.message ?? "Delete failed.");
         } finally {
             setDeleteLoading(false);
         }
@@ -241,32 +428,45 @@ const Home: React.FC = () => {
                     <span className="db-topbar-eyebrow">HR Portal</span>
                     <h1 className="db-topbar-title">Dashboard</h1>
                 </div>
-                <button className="db-btn-dark" onClick={() => navigate("/employees/new")}>
+                {/* ✅ Bug fix: was "/employees/new", correct route is "/create-employee" */}
+                <button className="db-btn-dark" onClick={() => navigate("/create-employee")}>
                     + New employee
                 </button>
             </header>
 
-            {/* ── Stat cards ── */}
+            {/* ── Stat cards — now powered by /insights/salary/ ── */}
             <div className="db-stats-grid">
                 <div className="db-stat-card">
                     <span className="db-stat-label">Total employees</span>
-                    <span className="db-stat-value">{employees.length}</span>
+                    <span className="db-stat-value">{totalCount}</span>
                 </div>
                 <div className="db-stat-card">
                     <span className="db-stat-label">Avg salary</span>
-                    <span className="db-stat-value">{fmt(globalAvg)}</span>
+                    <span className="db-stat-value">
+                        {insightsLoading || !globalSalary ? "—" : fmt(toNum(globalSalary.avgSalary))}
+                    </span>
                 </div>
                 <div className="db-stat-card">
                     <span className="db-stat-label">Highest salary</span>
-                    <span className="db-stat-value">{fmt(globalMax)}</span>
+                    <span className="db-stat-value">
+                        {insightsLoading || !globalSalary ? "—" : fmt(toNum(globalSalary.maxSalary))}
+                    </span>
                 </div>
                 <div className="db-stat-card">
                     <span className="db-stat-label">Lowest salary</span>
-                    <span className="db-stat-value">{fmt(globalMin)}</span>
+                    <span className="db-stat-value">
+                        {insightsLoading || !globalSalary ? "—" : fmt(toNum(globalSalary.minSalary))}
+                    </span>
                 </div>
                 <div className="db-stat-card">
                     <span className="db-stat-label">Departments</span>
                     <span className="db-stat-value">{departments.length - 1}</span>
+                </div>
+                <div className="db-stat-card">
+                    <span className="db-stat-label">Countries</span>
+                    <span className="db-stat-value">
+                        {insightsLoading ? "—" : countryInsights.length}
+                    </span>
                 </div>
             </div>
 
@@ -283,16 +483,13 @@ const Home: React.FC = () => {
                             type="text"
                             placeholder="Search name, title, dept…"
                             value={search}
-                            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                            onChange={(e) => handleSearch(e.target.value)}
                         />
                         <select className="db-select" value={deptFilter}
                             onChange={(e) => { setDeptFilter(e.target.value); setPage(1); }}>
                             {departments.map((d) => <option key={d}>{d}</option>)}
                         </select>
-                        <select className="db-select" value={typeFilter}
-                            onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}>
-                            {empTypes.map((t) => <option key={t}>{t}</option>)}
-                        </select>
+
                     </div>
                 </div>
 
@@ -311,12 +508,14 @@ const Home: React.FC = () => {
                         </thead>
                         <tbody>
                             {pageRows.length === 0 ? (
-                                <tr><td colSpan={8} className="db-empty">No employees match your filters.</td></tr>
+                                <tr><td colSpan={7} className="db-empty">No employees match your filters.</td></tr>
                             ) : pageRows.map((e) => (
                                 <tr key={e.id} className="db-tr">
                                     <td>
                                         <div className="db-name-cell">
-                                            <div className="db-avatar">{e.firstName[0]}{e.lastName[0]}</div>
+                                            <div className="db-avatar">
+                                                {(e.firstName?.[0] ?? "?")}{(e.lastName?.[0] ?? "")}
+                                            </div>
                                             <div>
                                                 <p className="db-name">{e.firstName} {e.lastName}</p>
                                                 <p className="db-email">{e.email}</p>
@@ -328,10 +527,9 @@ const Home: React.FC = () => {
                                     <td>{e.country || "—"}</td>
                                     <td>
                                         {e.employmentType
-                                            ? <span className={`db-badge db-badge--${e.employmentType.toLowerCase().replace("-", "")}`}>{e.employmentType}</span>
+                                            ? <span className={`db-badge db-badge--${e.employmentType.toLowerCase().replace(/[_-]/g, "")}`}>{e.employmentType}</span>
                                             : "—"}
                                     </td>
-
                                     <td className="db-salary">{e.salary ? fmt(toNum(e.salary)) : "—"}</td>
                                     <td>
                                         <div className="db-actions">
@@ -355,7 +553,6 @@ const Home: React.FC = () => {
                     </table>
                 </div>
 
-                {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="db-pagination">
                         <span className="db-page-info">Page {page} of {totalPages}</span>
@@ -380,21 +577,47 @@ const Home: React.FC = () => {
                         </div>
                     </div>
                 )}
+                {hasMore && (
+                    <div className="db-page-info">
+                        <button
+
+                            onClick={loadMore}
+                            disabled={fetchLoading}
+                        >
+                            {fetchLoading
+                                ? "Loading…"
+                                : `Load more (${employees.length} of ${totalCount} loaded)`}
+                        </button>
+                    </div>
+                )}
             </section>
+
 
             {/* ── Salary Metrics ── */}
             <section className="db-card">
                 <div className="db-card-header">
                     <div>
                         <h2 className="db-card-title">Salary metrics</h2>
-                        <p className="db-card-sub">Min · Avg · Max across groups</p>
+                        <p className="db-card-sub">
+                            {insightsLoading
+                                ? "Loading from server…"
+                                : insightsError
+                                    ? `⚠ ${insightsError}`
+                                    : "Min · Avg · Max — server-aggregated"}
+                        </p>
                     </div>
                     <div className="db-group-tabs">
                         {(["country", "jobTitle", "both", "experience", "department"] as GroupBy[]).map((g) => (
                             <button
                                 key={g}
                                 className={`db-tab${groupBy === g ? " db-tab--active" : ""}`}
-                                onClick={() => setGroupBy(g)}
+                                onClick={() => {
+                                    setGroupBy(g);
+                                    // reset filters when switching tabs
+                                    setFilterCountry("All");
+                                    setFilterJobTitle("All");
+                                    setFilterDepartment("All");
+                                }}
                             >
                                 {g === "jobTitle" ? "Job title"
                                     : g === "both" ? "Country + Title"
@@ -405,9 +628,85 @@ const Home: React.FC = () => {
                     </div>
                 </div>
 
-                {metricRows.length === 0
-                    ? <p className="db-empty">No salary data available.</p>
-                    : <MetricBar rows={metricRows} maxVal={maxVal} />}
+                {/* ── Per-tab filter dropdowns ── */}
+                {!insightsLoading && !insightsError && (
+                    <div className="db-insight-filters">
+                        {(groupBy === "country") && (
+                            <select
+                                className="db-select"
+                                value={filterCountry}
+                                onChange={(e) => setFilterCountry(e.target.value)}
+                            >
+                                {countryOptions.map((c) => <option key={c}>{c}</option>)}
+                            </select>
+                        )}
+                        {(groupBy === "jobTitle") && (
+                            <select
+                                className="db-select"
+                                value={filterJobTitle}
+                                onChange={(e) => setFilterJobTitle(e.target.value)}
+                            >
+                                {jobTitleOptions.map((t) => <option key={t}>{t}</option>)}
+                            </select>
+                        )}
+                        {(groupBy === "both") && (
+                            <>
+                                <select
+                                    className="db-select"
+                                    value={filterCountry}
+                                    onChange={(e) => setFilterCountry(e.target.value)}
+                                >
+                                    {countryOptions.map((c) => <option key={c}>{c}</option>)}
+                                </select>
+                                <select
+                                    className="db-select"
+                                    value={filterJobTitle}
+                                    onChange={(e) => setFilterJobTitle(e.target.value)}
+                                >
+                                    {jobTitleOptions.map((t) => <option key={t}>{t}</option>)}
+                                </select>
+                            </>
+                        )}
+                        {(groupBy === "department") && (
+                            <select
+                                className="db-select"
+                                value={filterDepartment}
+                                onChange={(e) => setFilterDepartment(e.target.value)}
+                            >
+                                {departmentOptions.map((d) => <option key={d}>{d}</option>)}
+                            </select>
+                        )}
+                        {/* experience has no filter — bands are fixed */}
+                    </div>
+                )}
+
+                {insightsLoading
+                    ? <MetricSkeleton />
+                    : insightsError
+                        ? (
+                            <div className="db-insights-error">
+                                <p>{insightsError}</p>
+                                <button className="db-btn-dark" onClick={() => window.location.reload()}>Retry</button>
+                            </div>
+                        )
+                        : metricRows.length === 0
+                            ? <p className="db-empty">No data for this filter.</p>
+                            : <MetricBar rows={metricRows} maxVal={maxVal} />
+                }
+
+                {!insightsLoading && groupBy === "department" && metricRows.length > 0 && (
+                    <div className="db-dept-ranges">
+                        <p className="db-dept-ranges-title">Salary spread by department</p>
+                        <div className="db-dept-range-list">
+                            {metricRows.map((r) => (
+                                <div key={r.label} className="db-dept-range-item">
+                                    <span>{r.label}</span>
+                                    <span className="db-dept-range-val">{r.extra} range</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </section>
 
             {/* ── Delete modal ── */}
@@ -420,19 +719,17 @@ const Home: React.FC = () => {
                         </p>
                         <div className="db-modal-actions">
                             <button className="db-modal-cancel" onClick={() => setDeleteTarget(null)}>Cancel</button>
-                            <button className={`db-modal-confirm${deleteLoading ? " db-modal-confirm--loading" : ""}`}
-                                onClick={confirmDelete} disabled={deleteLoading}>
+                            <button
+                                className={`db-modal-confirm${deleteLoading ? " db-modal-confirm--loading" : ""}`}
+                                onClick={confirmDelete}
+                                disabled={deleteLoading}
+                            >
                                 {deleteLoading && <span className="db-spinner db-spinner--sm" />}
                                 {deleteLoading ? "Deleting…" : "Yes, delete"}
                             </button>
                         </div>
                     </div>
                 </div>
-            )}
-
-            {/* ── Toast ── */}
-            {toast && (
-                <div className={`db-toast db-toast--${toast.type}`} role="alert">{toast.msg}</div>
             )}
         </div>
     );
