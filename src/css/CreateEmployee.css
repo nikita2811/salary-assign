@@ -1,0 +1,390 @@
+/* ─── Page shell ─────────────────────────────────────────────── */
+.emp-page {
+    min-height: 100vh;
+    background: #f5f4f0;
+    padding: 48px 16px 80px;
+    font-family: "DM Sans", "Helvetica Neue", sans-serif;
+}
+
+/* ─── Card container ─────────────────────────────────────────── */
+.emp-container {
+    max-width: 760px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 40px rgba(0, 0, 0, 0.06);
+}
+
+/* ─── Header ─────────────────────────────────────────────────── */
+.emp-header {
+    padding: 48px 52px 44px;
+    background: #0f0f0f;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+
+.emp-header::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.emp-header-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.emp-header-title {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin: 0 0 8px;
+    line-height: 1.1;
+    color: #ffffff;
+}
+
+.emp-header-sub {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0;
+    font-weight: 400;
+}
+
+/* ─── Body ───────────────────────────────────────────────────── */
+.emp-body {
+    padding: 44px 52px 52px;
+}
+
+/* ─── Section ────────────────────────────────────────────────── */
+.emp-section {
+    margin-bottom: 44px;
+}
+
+.emp-section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.emp-section-num {
+    font-size: 10px;
+    font-weight: 700;
+    color: #ccc;
+    letter-spacing: 0.04em;
+}
+
+/* ─── Grid ───────────────────────────────────────────────────── */
+.emp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+}
+
+.emp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.emp-field-full {
+    grid-column: 1 / -1;
+}
+
+/* ─── Labels ─────────────────────────────────────────────────── */
+.emp-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #444;
+    letter-spacing: -0.01em;
+}
+
+.emp-req {
+    color: #d04040;
+    margin-left: 2px;
+}
+
+/* ─── Inputs ─────────────────────────────────────────────────── */
+.emp-input {
+    height: 42px;
+    padding: 0 14px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #111;
+    background: #fafafa;
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    width: 100%;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.emp-input::placeholder {
+    color: #bbb;
+}
+
+.emp-input:hover {
+    border-color: #d0d0d0;
+    background: #ffffff;
+}
+
+.emp-input:focus {
+    border-color: #0f0f0f;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(15, 15, 15, 0.07);
+}
+
+.emp-select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+}
+
+/* ─── Prefix wrap (₹) ───────────────────────────────────────── */
+.emp-prefix-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.emp-prefix {
+    position: absolute;
+    left: 14px;
+    font-size: 14px;
+    color: #999;
+    pointer-events: none;
+    user-select: none;
+    z-index: 1;
+}
+
+.emp-input-prefix {
+    padding-left: 28px;
+}
+
+/* ─── Skills ─────────────────────────────────────────────────── */
+.emp-skills-input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.emp-skills-input-row .emp-input {
+    flex: 1;
+}
+
+.emp-skill-add-btn {
+    height: 42px;
+    padding: 0 20px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #ffffff;
+    background: #0f0f0f;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: -0.01em;
+}
+
+.emp-skill-add-btn:hover {
+    opacity: 0.82;
+}
+
+.emp-skill-add-btn:active {
+    transform: scale(0.97);
+}
+
+.emp-skills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.emp-skill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f5f4f0;
+    border: 1px solid #e8e8e8;
+    border-radius: 20px;
+    padding: 5px 12px 5px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
+    transition: background 0.12s;
+}
+
+.emp-skill-tag:hover {
+    background: #eceae5;
+}
+
+.emp-skill-remove {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    color: #bbb;
+    transition: color 0.12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+}
+
+.emp-skill-remove:hover {
+    color: #555;
+}
+
+/* ─── Submit row ─────────────────────────────────────────────── */
+.emp-submit-row {
+    margin-top: 8px;
+}
+
+.emp-submit-btn {
+    width: 100%;
+    height: 50px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+    background: #0f0f0f;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: opacity 0.15s, transform 0.1s;
+}
+
+.emp-submit-btn:hover:not(:disabled) {
+    opacity: 0.83;
+}
+
+.emp-submit-btn:active:not(:disabled) {
+    transform: scale(0.99);
+}
+
+.emp-submit-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.emp-submit-btn--loading {
+    pointer-events: none;
+}
+
+/* ─── Spinner ────────────────────────────────────────────────── */
+.emp-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: emp-spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes emp-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ─── Toast ──────────────────────────────────────────────────── */
+.emp-toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    padding: 13px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: "DM Sans", "Helvetica Neue", sans-serif;
+    max-width: 320px;
+    animation: emp-toast-in 0.22s ease;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14);
+}
+
+.emp-toast--success {
+    background: #0f0f0f;
+    color: #ffffff;
+}
+
+.emp-toast--error {
+    background: #c13030;
+    color: #ffffff;
+}
+
+@keyframes emp-toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 600px) {
+
+    .emp-header,
+    .emp-body {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+    .emp-header {
+        padding-top: 36px;
+        padding-bottom: 32px;
+    }
+
+    .emp-header-title {
+        font-size: 26px;
+    }
+
+    .emp-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .emp-field-full {
+        grid-column: 1;
+    }
+
+    .emp-toast {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+    }
+}
